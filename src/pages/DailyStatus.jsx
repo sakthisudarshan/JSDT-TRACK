@@ -9,13 +9,17 @@ function DailyStatus() {
   const navigate = useNavigate();
   const [membersList, setMembersList] = useState([]);
   
-  const [member, setMember] = useState("");
-  const [task, setTask] = useState("");
-  const [activity, setActivity] = useState("");
-  const [status, setStatus] = useState("Ongoing");
-  const [deliverable, setDeliverable] = useState("");
-  const [comments, setComments] = useState("");
-  const [ticketId, setTicketId] = useState("");
+  // Bug tracking dashboard fields
+  const [assignee, setAssignee] = useState("");
+  const [type, setType] = useState("Bug");
+  const [feature, setFeature] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [qaStatus, setQaStatus] = useState("Untested");
+  const [taskId, setTaskId] = useState("");
+  const [ticketStatus, setTicketStatus] = useState("Ongoing");
+  const [notes, setNotes] = useState("");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -24,45 +28,45 @@ function DailyStatus() {
     Promise.resolve().then(() => {
       setMembersList(list);
     });
-    // Auto select first member if available or load last selected if needed
   }, []);
 
   const handleApplyTemplate = (tpl) => {
-    setTask(tpl.title || "");
-    setTicketId("");
-    setActivity(tpl.activity || "");
-    setDeliverable(tpl.deliverable || "");
-    setComments(tpl.comments || "");
+    setType(tpl.type || "Bug");
+    setFeature(tpl.feature || "");
+    setDescription(tpl.description || "");
+    setPriority(tpl.priority || "Medium");
+    setQaStatus(tpl.qaStatus || "Untested");
+    setTaskId(tpl.taskId || "");
+    setTicketStatus(tpl.ticketStatus || "Ongoing");
+    setNotes(tpl.notes || "");
   };
 
   const handleSave = (e) => {
     e.preventDefault();
-    if (!member || member === "Select Team Member") {
-      setError("Please select a team member.");
+    if (!assignee || assignee === "Select Assignee") {
+      setError("Please select an assignee.");
       return;
     }
-    if (!task.trim()) {
-      setError("Please enter a task title.");
+    if (!feature.trim()) {
+      setError("Please enter a feature name.");
       return;
     }
-    if (!activity.trim()) {
-      setError("Please enter the activity details.");
-      return;
-    }
-    if (!deliverable.trim()) {
-      setError("Please enter the deliverable.");
+    if (!description.trim()) {
+      setError("Please enter description / activity details.");
       return;
     }
 
     setError("");
     const entry = {
-      member,
-      task,
-      ticketId,
-      activity,
-      status,
-      deliverable,
-      comments,
+      type,
+      feature,
+      description,
+      priority,
+      assignee,
+      qaStatus,
+      taskId: taskId.trim(),
+      ticketStatus,
+      notes,
     };
 
     saveEntry(entry);
@@ -73,13 +77,15 @@ function DailyStatus() {
   };
 
   const handleClear = () => {
-    setMember("");
-    setTask("");
-    setTicketId("");
-    setActivity("");
-    setStatus("Ongoing");
-    setDeliverable("");
-    setComments("");
+    setAssignee("");
+    setType("Bug");
+    setFeature("");
+    setDescription("");
+    setPriority("Medium");
+    setQaStatus("Untested");
+    setTaskId("");
+    setTicketStatus("Ongoing");
+    setNotes("");
     setError("");
   };
 
@@ -89,10 +95,10 @@ function DailyStatus() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              Daily Status Entry
+              Daily Bug/Task Entry
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Add your work details for today.
+              Add a new item to the Bug Tracking Dashboard.
             </p>
           </div>
           <div className="mt-4 md:mt-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold px-4 py-2 rounded-xl text-sm border border-blue-100 dark:border-blue-800">
@@ -117,17 +123,18 @@ function DailyStatus() {
           <div className="lg:col-span-2">
             <form onSubmit={handleSave} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-sm p-6 space-y-6">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Row 1: Assignee, Type, Priority */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Team Member <span className="text-red-500">*</span>
+                    Assignee <span className="text-red-500">*</span>
                   </label>
                   <select 
-                    value={member}
-                    onChange={(e) => setMember(e.target.value)}
+                    value={assignee}
+                    onChange={(e) => setAssignee(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                   >
-                    <option value="">Select Team Member</option>
+                    <option value="">Select Assignee</option>
                     {membersList.map((m) => (
                       <option key={m} value={m}>{m}</option>
                     ))}
@@ -136,11 +143,91 @@ function DailyStatus() {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Current Status <span className="text-red-500">*</span>
+                    Type <span className="text-red-500">*</span>
                   </label>
                   <select 
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  >
+                    <option value="Bug">Bug</option>
+                    <option value="Feature">Feature</option>
+                    <option value="Task">Task</option>
+                    <option value="Improvement">Improvement</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Priority <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Task ID (Ticket ID) and Feature Name */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Task ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. JSDT-123"
+                    value={taskId}
+                    onChange={(e) => setTaskId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Feature <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. User Authentication"
+                    value={feature}
+                    onChange={(e) => setFeature(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: QA Status and Ticket Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    QA Status <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={qaStatus}
+                    onChange={(e) => setQaStatus(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  >
+                    <option value="Untested">Untested</option>
+                    <option value="Passed">Passed</option>
+                    <option value="Failed">Failed</option>
+                    <option value="Blocked">Blocked</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Ticket Status <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={ticketStatus}
+                    onChange={(e) => setTicketStatus(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                   >
                     <option value="Completed">Completed</option>
@@ -151,68 +238,30 @@ function DailyStatus() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Ticket ID
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. JSDT-123"
-                    value={ticketId}
-                    onChange={(e) => setTicketId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Task Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. End-to-End Testing"
-                    value={task}
-                    onChange={(e) => setTask(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                  />
-                </div>
-              </div>
-
+              {/* Row 4: Description */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Activity Details <span className="text-red-500">*</span>
+                  Description / Activity <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   rows="4"
-                  placeholder="Describe your work done, modules updated, or issues verified..."
-                  value={activity}
-                  onChange={(e) => setActivity(e.target.value)}
+                  placeholder="Detail the bug report, test results, or task description..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
 
+              {/* Row 5: Notes */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Deliverable <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Testing completed, checklist updated, git pull request #12"
-                  value={deliverable}
-                  onChange={(e) => setDeliverable(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Comments
+                  Notes / Comments
                 </label>
                 <textarea
                   rows="3"
-                  placeholder="Any blocks, next steps, dependencies, or remarks..."
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
+                  placeholder="Any blockages, observations, or QA notes..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
@@ -222,7 +271,7 @@ function DailyStatus() {
                   type="submit"
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-blue-500/10 cursor-pointer"
                 >
-                  💾 Save Status
+                  💾 Save Bug/Task Status
                 </button>
                 <button
                   type="button"
@@ -243,7 +292,7 @@ function DailyStatus() {
                 ⚡ Quick Templates
               </h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                Click a template to auto-fill common JSDT tasks.
+                Click a template to auto-fill common JSDT bug tracker formats.
               </p>
 
               <div className="space-y-4">
@@ -254,11 +303,21 @@ function DailyStatus() {
                     onClick={() => handleApplyTemplate(tpl)}
                     className="w-full text-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500/60 p-4 rounded-xl shadow-sm hover:shadow transition group cursor-pointer"
                   >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                        tpl.type === "Bug" ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400" : "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
+                      }`}>
+                        {tpl.type}
+                      </span>
+                      <span className="text-[10px] text-slate-400 uppercase font-extrabold">
+                        {tpl.priority}
+                      </span>
+                    </div>
                     <h4 className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-sm transition">
-                      {tpl.title}
+                      {tpl.feature}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
-                      {tpl.activity}
+                      {tpl.description}
                     </p>
                     <div className="mt-3 flex items-center text-xs text-blue-600 dark:text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition">
                       Apply Template &rarr;

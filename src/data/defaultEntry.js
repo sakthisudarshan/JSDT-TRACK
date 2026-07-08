@@ -1,10 +1,13 @@
 const defaultEntry = {
-  member: "",
-  task: "",
-  activity: "",
-  status: "Ongoing",
-  deliverable: "",
-  comments: "",
+  type: "Bug",
+  feature: "",
+  description: "",
+  priority: "Medium",
+  assignee: "",
+  qaStatus: "Untested",
+  taskId: "",
+  ticketStatus: "Ongoing",
+  notes: "",
 };
 
 export default defaultEntry;

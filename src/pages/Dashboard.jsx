@@ -250,25 +250,26 @@ function Dashboard() {
                     {recentActivities.map((item) => (
                       <tr key={item.id} className="text-sm hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors">
                         <td className="py-3.5 font-semibold text-slate-800 dark:text-slate-200">
-                          {item.member}
+                          {item.assignee || item.member}
                         </td>
-                        <td className="py-3.5 text-slate-600 dark:text-slate-400 max-w-xs truncate">
-                          {item.task}
+                        <td className="py-3.5 text-slate-600 dark:text-slate-400 max-w-xs truncate font-semibold">
+                          {item.feature || item.task}
+                          {item.taskId && <span className="ml-1 text-xs text-slate-400 font-mono">[{item.taskId}]</span>}
                         </td>
                         <td className="py-3.5">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            item.status === "Completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" :
-                            item.status === "Ongoing" ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" :
-                            item.status === "Pending" ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400" :
+                            (item.ticketStatus || item.status) === "Completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" :
+                            (item.ticketStatus || item.status) === "Ongoing" ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" :
+                            (item.ticketStatus || item.status) === "Pending" ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400" :
                             "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${
-                              item.status === "Completed" ? "bg-emerald-500" :
-                              item.status === "Ongoing" ? "bg-amber-500" :
-                              item.status === "Pending" ? "bg-blue-500" :
+                              (item.ticketStatus || item.status) === "Completed" ? "bg-emerald-500" :
+                              (item.ticketStatus || item.status) === "Ongoing" ? "bg-amber-500" :
+                              (item.ticketStatus || item.status) === "Pending" ? "bg-blue-500" :
                               "bg-red-500"
                             }`}></span>
-                            {item.status}
+                            {item.ticketStatus || item.status}
                           </span>
                         </td>
                         <td className="py-3.5 text-right text-slate-400 dark:text-slate-500 text-xs">

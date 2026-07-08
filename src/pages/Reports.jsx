@@ -63,12 +63,12 @@ function Reports() {
 
   const filteredEntries = getFilteredEntries();
 
-  // Calculate statistics
+  // Calculate statistics using ticketStatus (Completed, Ongoing, Pending, Blocked)
   const stats = {
-    completed: filteredEntries.filter((e) => e.status === "Completed").length,
-    ongoing: filteredEntries.filter((e) => e.status === "Ongoing").length,
-    pending: filteredEntries.filter((e) => e.status === "Pending").length,
-    blocked: filteredEntries.filter((e) => e.status === "Blocked").length,
+    completed: filteredEntries.filter((e) => (e.ticketStatus || e.status) === "Completed").length,
+    ongoing: filteredEntries.filter((e) => (e.ticketStatus || e.status) === "Ongoing").length,
+    pending: filteredEntries.filter((e) => (e.ticketStatus || e.status) === "Pending").length,
+    blocked: filteredEntries.filter((e) => (e.ticketStatus || e.status) === "Blocked").length,
     total: filteredEntries.length,
   };
 
@@ -83,14 +83,17 @@ function Reports() {
 
     // Populate counts
     filteredEntries.forEach((entry) => {
-      if (breakdown[entry.member]) {
-        breakdown[entry.member][entry.status]++;
-        breakdown[entry.member].Total++;
+      const name = entry.assignee || entry.member;
+      const statusVal = entry.ticketStatus || entry.status || "Ongoing";
+      
+      if (breakdown[name]) {
+        breakdown[name][statusVal] = (breakdown[name][statusVal] || 0) + 1;
+        breakdown[name].Total++;
       } else {
         // If a member was deleted but their entries still exist
-        breakdown[entry.member] = { Completed: 0, Ongoing: 0, Pending: 0, Blocked: 0, Total: 0 };
-        breakdown[entry.member][entry.status]++;
-        breakdown[entry.member].Total++;
+        breakdown[name] = { Completed: 0, Ongoing: 0, Pending: 0, Blocked: 0, Total: 0 };
+        breakdown[name][statusVal] = 1;
+        breakdown[name].Total = 1;
       }
     });
 
@@ -295,26 +298,27 @@ function Reports() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                        {item.member}
+                        {item.assignee || item.member}
                       </span>
                       <span className="text-[10px] text-slate-400">
                         {item.date}
                       </span>
                     </div>
                     <h4 className="font-semibold text-slate-700 dark:text-slate-300 text-sm line-clamp-1">
-                      {item.task}
+                      {item.feature || item.task}
+                      {item.taskId && <span className="ml-1 text-xs text-slate-400 font-mono">[{item.taskId}]</span>}
                     </h4>
                     <div className="flex items-center justify-between pt-1">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.status === "Completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400" :
-                        item.status === "Ongoing" ? "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400" :
-                        item.status === "Pending" ? "bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400" :
-                        "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400"
+                        (item.ticketStatus || item.status) === "Completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-450" :
+                        (item.ticketStatus || item.status) === "Ongoing" ? "bg-amber-50 text-amber-700 dark:bg-amber-955/20 dark:text-amber-400" :
+                        (item.ticketStatus || item.status) === "Pending" ? "bg-blue-50 text-blue-700 dark:bg-blue-955/20 dark:text-blue-400" :
+                        "bg-red-50 text-red-700 dark:bg-red-955/20 dark:text-red-400"
                       }`}>
-                        {item.status}
+                        {item.ticketStatus || item.status}
                       </span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 italic max-w-[120px] truncate">
-                        {item.deliverable}
+                        {item.notes || item.comments || "-"}
                       </span>
                     </div>
                   </div>
