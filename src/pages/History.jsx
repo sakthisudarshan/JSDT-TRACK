@@ -31,6 +31,7 @@ function History() {
   const [editStatus, setEditStatus] = useState("");
   const [editDeliverable, setEditDeliverable] = useState("");
   const [editComments, setEditComments] = useState("");
+  const [editTicketId, setEditTicketId] = useState("");
 
   // Delete Confirmation State
   const [deletingId, setDeletingId] = useState(null);
@@ -53,6 +54,7 @@ function History() {
   const filteredEntries = entries.filter((item) => {
     const matchesSearch = 
       item.task.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.ticketId && item.ticketId.toLowerCase().includes(searchQuery.toLowerCase())) ||
       item.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.deliverable.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.comments && item.comments.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -77,6 +79,7 @@ function History() {
     setEditingEntry(entry);
     setEditMember(entry.member);
     setEditTask(entry.task);
+    setEditTicketId(entry.ticketId || "");
     setEditActivity(entry.activity);
     setEditStatus(entry.status);
     setEditDeliverable(entry.deliverable);
@@ -97,6 +100,7 @@ function History() {
           ...item,
           member: editMember,
           task: editTask,
+          ticketId: editTicketId,
           activity: editActivity,
           status: editStatus,
           deliverable: editDeliverable,
@@ -241,6 +245,7 @@ function History() {
                   <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                     <th className="p-4 w-28">Date</th>
                     <th className="p-4 w-40">Member</th>
+                    <th className="p-4 w-32">Ticket ID</th>
                     <th className="p-4 w-52">Task</th>
                     <th className="p-4">Activity</th>
                     <th className="p-4 w-32">Status</th>
@@ -260,6 +265,9 @@ function History() {
                       </td>
                       <td className="p-4 font-bold text-slate-900 dark:text-white">
                         {item.member}
+                      </td>
+                      <td className="p-4 font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        {item.ticketId || "-"}
                       </td>
                       <td className="p-4 font-semibold text-slate-800 dark:text-slate-200">
                         {item.task}
@@ -359,14 +367,25 @@ function History() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Task Title</label>
-                  <input
-                    type="text"
-                    value={editTask}
-                    onChange={(e) => setEditTask(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                  />
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Ticket ID</label>
+                    <input
+                      type="text"
+                      value={editTicketId}
+                      onChange={(e) => setEditTicketId(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Task Title</label>
+                    <input
+                      type="text"
+                      value={editTask}
+                      onChange={(e) => setEditTask(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
                 <div>

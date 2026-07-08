@@ -15,6 +15,7 @@ function DailyStatus() {
   const [status, setStatus] = useState("Ongoing");
   const [deliverable, setDeliverable] = useState("");
   const [comments, setComments] = useState("");
+  const [ticketId, setTicketId] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -28,6 +29,7 @@ function DailyStatus() {
 
   const handleApplyTemplate = (tpl) => {
     setTask(tpl.title || "");
+    setTicketId("");
     setActivity(tpl.activity || "");
     setDeliverable(tpl.deliverable || "");
     setComments(tpl.comments || "");
@@ -56,6 +58,7 @@ function DailyStatus() {
     const entry = {
       member,
       task,
+      ticketId,
       activity,
       status,
       deliverable,
@@ -72,6 +75,7 @@ function DailyStatus() {
   const handleClear = () => {
     setMember("");
     setTask("");
+    setTicketId("");
     setActivity("");
     setStatus("Ongoing");
     setDeliverable("");
@@ -147,17 +151,31 @@ function DailyStatus() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Task Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. End-to-End Testing"
-                  value={task}
-                  onChange={(e) => setTask(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Ticket ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. JSDT-123"
+                    value={ticketId}
+                    onChange={(e) => setTicketId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Task Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. End-to-End Testing"
+                    value={task}
+                    onChange={(e) => setTask(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  />
+                </div>
               </div>
 
               <div>

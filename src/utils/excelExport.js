@@ -23,6 +23,7 @@ export const exportToExcel = async (entries) => {
     worksheet.columns = [
       { header: "Date", key: "date", width: 14 },
       { header: "Member Name", key: "member", width: 22 },
+      { header: "Ticket ID", key: "ticketId", width: 15 },
       { header: "Task Title", key: "task", width: 30 },
       { header: "Activity", key: "activity", width: 45 },
       { header: "Status", key: "status", width: 15 },
@@ -63,6 +64,7 @@ export const exportToExcel = async (entries) => {
       const row = worksheet.addRow({
         date: item.date,
         member: item.member,
+        ticketId: item.ticketId || "",
         task: item.task,
         activity: item.activity,
         status: item.status,
@@ -80,8 +82,8 @@ export const exportToExcel = async (entries) => {
           color: { argb: "FF334155" }, // Slate-700
         };
 
-        // Alignments
-        if (colNumber === 1 || colNumber === 2 || colNumber === 5) {
+        // Alignments: Date, Member Name, Ticket ID, and Status (cols 1, 2, 3, 6) are centered.
+        if (colNumber === 1 || colNumber === 2 || colNumber === 3 || colNumber === 6) {
           cell.alignment = {
             vertical: "middle",
             horizontal: "center",
@@ -103,8 +105,8 @@ export const exportToExcel = async (entries) => {
           right: { style: "thin", color: { argb: "FFE2E8F0" } },
         };
 
-        // Conditional Formatting for Status
-        if (colNumber === 5) {
+        // Conditional Formatting for Status is now column index 6
+        if (colNumber === 6) {
           const val = cell.value;
           if (val === "Completed") {
             cell.fill = {
