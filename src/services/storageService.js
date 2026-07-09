@@ -1,4 +1,5 @@
 import defaultTeamMembers from "../data/teamMembers";
+import { pushToCloud } from "./syncService";
 
 const STORAGE_KEY = "jsdt-status-data";
 const SETTINGS_KEY = "jsdt-settings";
@@ -13,19 +14,20 @@ export const getEntries = () => {
 // Save a new entry
 export const saveEntry = (entry) => {
   const entries = getEntries();
-
-  entries.push({
+  const newEntry = {
     id: Date.now(),
     date: new Date().toLocaleDateString("en-GB"),
     ...entry,
-  });
-
+  };
+  entries.push(newEntry);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  pushToCloud("entries", entries);
 };
 
-// Replace all entries (used for edit/delete later)
+// Replace all entries (used for edit/delete)
 export const saveEntries = (entries) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  pushToCloud("entries", entries);
 };
 
 // Delete one entry
@@ -34,7 +36,7 @@ export const deleteEntry = (id) => {
   saveEntries(entries);
 };
 
-// Get one entry by ID (useful for editing later)
+// Get one entry by ID
 export const getEntryById = (id) => {
   return getEntries().find((item) => item.id === id);
 };
@@ -52,14 +54,18 @@ export const getSettings = () => {
 
 export const saveSettings = (settings) => {
   const current = getSettings();
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...settings }));
+  const updated = { ...current, ...settings };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+  pushToCloud("settings", updated);
 };
 
-// Team Members CRUD in LocalStorage
+// Team Members CRUD
 export const getTeamMembers = () => {
   const members = localStorage.getItem(MEMBERS_KEY);
   if (!members) {
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(defaultTeamMembers));
+    // Push defaults to cloud as initial sync
+    pushToCloud("members", defaultTeamMembers);
     return defaultTeamMembers;
   }
   return JSON.parse(members);
@@ -67,4 +73,5 @@ export const getTeamMembers = () => {
 
 export const saveTeamMembers = (members) => {
   localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
+  pushToCloud("members", members);
 };

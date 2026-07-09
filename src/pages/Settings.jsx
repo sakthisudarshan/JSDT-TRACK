@@ -6,6 +6,7 @@ import {
   getTeamMembers, 
   saveTeamMembers 
 } from "../services/storageService";
+import { getSyncKey, pullFromCloud } from "../services/syncService";
 import { 
   Save, 
   UserPlus, 
@@ -16,7 +17,12 @@ import {
   Palette,
   Building,
   FolderOpen,
-  Users
+  Users,
+  Cloud,
+  Copy,
+  Eye,
+  EyeOff,
+  Link2
 } from "lucide-react";
 
 function Settings() {
@@ -35,6 +41,13 @@ function Settings() {
 
   const [success, setSuccess] = useState("");
 
+  // Sync states
+  const [syncKey, setSyncKey] = useState("");
+  const [inputSyncKey, setInputSyncKey] = useState("");
+  const [syncSuccess, setSyncSuccess] = useState("");
+  const [syncError, setSyncError] = useState("");
+  const [showSyncKey, setShowSyncKey] = useState(false);
+
   // Load configuration
   useEffect(() => {
     const config = getSettings();
@@ -44,6 +57,7 @@ function Settings() {
       setExportFolder(config.exportFolder || "C:\\JSDT Status Tracker\\Exports");
       setTheme(config.theme || "light");
       setMembers(membersList);
+      setSyncKey(getSyncKey());
     });
   }, []);
 
@@ -101,52 +115,67 @@ function Settings() {
     }
   };
 
-  // Start inline editing of team member name
+  // Start inline editing of member name
   const handleStartEditMember = (index, value) => {
     setEditingIndex(index);
     setEditingValue(value);
   };
 
-  // Save inline edit of team member name
+  // Save edited member name
   const handleSaveEditMember = (index) => {
-    const updatedValue = editingValue.trim();
-    if (!updatedValue) return;
+    const newVal = editingValue.trim();
+    if (!newVal) return;
 
-    if (members.some((m, i) => i !== index && m.toLowerCase() === updatedValue.toLowerCase())) {
-      alert("Member name already exists.");
-      return;
-    }
-
-    const updated = members.map((m, i) => (i === index ? updatedValue : m));
+    const updated = [...members];
+    updated[index] = newVal;
     setMembers(updated);
     saveTeamMembers(updated);
     setEditingIndex(null);
-    setEditingValue("");
-    triggerSuccess("Member updated successfully!");
+    triggerSuccess(`Renamed team member to ${newVal}!`);
   };
 
   const triggerSuccess = (msg) => {
     setSuccess(msg);
-    setTimeout(() => {
-      setSuccess("");
-    }, 2500);
+    setTimeout(() => setSuccess(""), 3000);
+  };
+
+  // Link another device
+  const handleLinkDevice = async (e) => {
+    e.preventDefault();
+    const key = inputSyncKey.trim();
+    if (!key) return;
+    setSyncError("");
+    setSyncSuccess("");
+
+    const ok = await pullFromCloud(key);
+    if (ok) {
+      setSyncSuccess("Linked successfully! Syncing database and reloading workspace...");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      setSyncError("Sync failed. Check Sync Key connection and try again.");
+    }
+  };
+
+  const handleCopySyncKey = () => {
+    navigator.clipboard.writeText(syncKey);
+    triggerSuccess("Sync key copied to clipboard!");
   };
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto animate-fade-in space-y-8">
+      <div className="max-w-6xl mx-auto animate-fade-in space-y-6">
         
-        {/* Title */}
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            Preferences & Settings
+            Workspace Settings
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Customize tracker layout, workspace info, and manage team members.
+            Configure project parameters, color modes, team roster, and cloud synchronization.
           </p>
         </div>
 
-        {/* Success Alert */}
         {success && (
           <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-pulse flex items-center gap-2">
             ✅ {success}
@@ -249,86 +278,162 @@ function Settings() {
               </div>
             </div>
 
+            {/* Cloud Sync Section */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm space-y-5">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
+                <Cloud size={18} className="text-blue-500" />
+                <span>Cloud Synchronization</span>
+              </h2>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Connect multiple devices (e.g. mobile, tablet, desktop) to share your bug/task metrics database. Offline changes will automatically sync when online.
+              </p>
+
+              {/* Show/Copy key */}
+              <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Your Unique Sync Key</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type={showSyncKey ? "text" : "password"}
+                    value={syncKey}
+                    readOnly
+                    className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-slate-200 border-none outline-none select-all"
+                  />
+                  <button
+                    onClick={() => setShowSyncKey(!showSyncKey)}
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-850 rounded text-slate-500 dark:text-slate-400"
+                    title={showSyncKey ? "Hide key" : "Show key"}
+                  >
+                    {showSyncKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                  <button
+                    onClick={handleCopySyncKey}
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-850 rounded text-slate-500 dark:text-slate-400"
+                    title="Copy sync key"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Link form */}
+              <form onSubmit={handleLinkDevice} className="space-y-3 pt-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Link Another Device</label>
+                
+                {syncSuccess && (
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-800 rounded-xl text-xs">
+                    {syncSuccess}
+                  </div>
+                )}
+                {syncError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-250 dark:border-red-800 rounded-xl text-xs">
+                    {syncError}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <Link2 size={16} />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Paste device sync key..."
+                      value={inputSyncKey}
+                      onChange={(e) => setInputSyncKey(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1 cursor-pointer"
+                  >
+                    Connect
+                  </button>
+                </div>
+              </form>
+            </div>
+
           </div>
 
-          {/* Right Column: Team Member Management */}
-          <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm space-y-6">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
-              <Users size={18} className="text-blue-500" />
-              <span>Team Members ({members.length})</span>
-            </h2>
+          {/* Right Column: Team Roster */}
+          <div>
+            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm space-y-6">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
+                <Users size={18} className="text-blue-500" />
+                <span>Team Roster</span>
+              </h2>
 
-            {/* Add Member Form */}
-            <form onSubmit={handleAddMember} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter member's name"
-                value={newMemberName}
-                onChange={(e) => setNewMemberName(e.target.value)}
-                className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              />
-              <button
-                type="submit"
-                disabled={!newMemberName.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold p-2.5 rounded-xl flex items-center justify-center transition cursor-pointer"
-              >
-                <UserPlus size={18} />
-              </button>
-            </form>
-
-            {/* Members List */}
-            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-              {members.map((name, i) => (
-                <div 
-                  key={name}
-                  className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 transition"
+              <form onSubmit={handleAddMember} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter full name..."
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 transition text-sm cursor-pointer"
                 >
-                  {editingIndex === i ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <input
-                        type="text"
-                        value={editingValue}
-                        onChange={(e) => setEditingValue(e.target.value)}
-                        className="flex-1 bg-white dark:bg-slate-900 border border-blue-400 dark:border-blue-500 rounded-lg px-2.5 py-1 text-sm text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                      <button
-                        onClick={() => handleSaveEditMember(i)}
-                        className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                      >
-                        <Check size={14} />
-                      </button>
-                      <button
-                        onClick={() => setEditingIndex(null)}
-                        className="p-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                        {name}
-                      </span>
-                      <div className="flex items-center gap-2">
+                  <UserPlus size={16} />
+                  <span>Add</span>
+                </button>
+              </form>
+
+              <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                {members.map((name, i) => (
+                  <div 
+                    key={name}
+                    className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 transition"
+                  >
+                    {editingIndex === i ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <input
+                          type="text"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          className="flex-1 bg-white dark:bg-slate-900 border border-blue-400 dark:border-blue-500 rounded-lg px-2.5 py-1 text-sm text-slate-900 dark:text-slate-100 focus:outline-none"
+                        />
                         <button
-                          type="button"
-                          onClick={() => handleStartEditMember(i, name)}
-                          className="p-1.5 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 border border-slate-200 dark:border-slate-700/60 rounded-lg transition"
+                          onClick={() => handleSaveEditMember(i)}
+                          className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
                         >
-                          <Edit2 size={14} />
+                          <Check size={14} />
                         </button>
                         <button
-                          type="button"
-                          onClick={() => handleDeleteMember(i)}
-                          className="p-1.5 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 border border-slate-200 dark:border-slate-700/60 rounded-lg transition"
+                          onClick={() => setEditingIndex(null)}
+                          className="p-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition"
                         >
-                          <Trash2 size={14} />
+                          <X size={14} />
                         </button>
                       </div>
-                    </>
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      <>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                          {name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditMember(i, name)}
+                            className="p-1.5 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 border border-slate-200 dark:border-slate-700/60 rounded-lg transition"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMember(i)}
+                            className="p-1.5 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 border border-slate-200 dark:border-slate-700/60 rounded-lg transition"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
