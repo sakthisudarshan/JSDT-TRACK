@@ -19,9 +19,16 @@ function DailyStatus() {
   const [taskId, setTaskId] = useState("");
   const [ticketStatus, setTicketStatus] = useState("Ongoing");
   const [notes, setNotes] = useState("");
+  const [metricsCount, setMetricsCount] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const assigneeTechniques = {
+    "Aarthi Vishakha": ["CROSSHAIR", "RANDON/LIZARD", "TESTMON", "BENNIGET", "PRIMARY"],
+    "Sakthi Sudarshan": ["PYLINT", "COSMIC RAY", "COGNITIVE-AST", "PYDRILLER", "JSCPD"],
+    "Visvantha": ["COVERAGE.PY", "COVERAGE.PY+BENIGET", "PIP AUDIT", "SEMGREP+OSS", "PYMCDC"]
+  };
 
   useEffect(() => {
     const list = getTeamMembers();
@@ -39,6 +46,7 @@ function DailyStatus() {
     setTaskId(tpl.taskId || "");
     setTicketStatus(tpl.ticketStatus || "Ongoing");
     setNotes(tpl.notes || "");
+    setMetricsCount(tpl.metricsCount || "");
   };
 
   const handleSave = (e) => {
@@ -67,6 +75,7 @@ function DailyStatus() {
       taskId: taskId.trim(),
       ticketStatus,
       notes,
+      metricsCount: type === "Task" ? metricsCount : "",
     };
 
     saveEntry(entry);
@@ -86,6 +95,7 @@ function DailyStatus() {
     setTaskId("");
     setTicketStatus("Ongoing");
     setNotes("");
+    setMetricsCount("");
     setError("");
   };
 
@@ -189,18 +199,50 @@ function DailyStatus() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className={type === "Task" ? "md:col-span-1" : "md:col-span-2"}>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Feature <span className="text-red-500">*</span>
+                    Feature / Technique <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. User Authentication"
-                    value={feature}
-                    onChange={(e) => setFeature(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                  />
+                  {type === "Task" ? (
+                    <select
+                      value={feature}
+                      onChange={(e) => setFeature(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                    >
+                      <option value="">Select Technique</option>
+                      {assignee && assigneeTechniques[assignee] ? (
+                        assigneeTechniques[assignee].map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))
+                      ) : (
+                        <option value="" disabled>Please select Assignee first</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. User Authentication"
+                      value={feature}
+                      onChange={(e) => setFeature(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                    />
+                  )}
                 </div>
+
+                {type === "Task" && (
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                      Metrics Count
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 12"
+                      value={metricsCount}
+                      onChange={(e) => setMetricsCount(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Row 3: QA Status and Ticket Status */}

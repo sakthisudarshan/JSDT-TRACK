@@ -37,9 +37,16 @@ function History() {
   const [editTaskId, setEditTaskId] = useState("");
   const [editTicketStatus, setEditTicketStatus] = useState("Ongoing");
   const [editNotes, setEditNotes] = useState("");
+  const [editMetricsCount, setEditMetricsCount] = useState("");
 
   // Delete Confirmation State
   const [deletingId, setDeletingId] = useState(null);
+
+  const assigneeTechniques = {
+    "Aarthi Vishakha": ["CROSSHAIR", "RANDON/LIZARD", "TESTMON", "BENNIGET", "PRIMARY"],
+    "Sakthi Sudarshan": ["PYLINT", "COSMIC RAY", "COGNITIVE-AST", "PYDRILLER", "JSCPD"],
+    "Visvantha": ["COVERAGE.PY", "COVERAGE.PY+BENIGET", "PIP AUDIT", "SEMGREP+OSS", "PYMCDC"]
+  };
 
   // Load data on mount
   useEffect(() => {
@@ -92,6 +99,7 @@ function History() {
     setEditTaskId(entry.taskId || entry.ticketId || "");
     setEditTicketStatus(entry.ticketStatus || entry.status || "Ongoing");
     setEditNotes(entry.notes || entry.comments || "");
+    setEditMetricsCount(entry.metricsCount || "");
   };
 
   // Handle Edit Save
@@ -115,6 +123,7 @@ function History() {
           taskId: editTaskId.trim(),
           ticketStatus: editTicketStatus,
           notes: editNotes,
+          metricsCount: editType === "Task" ? editMetricsCount : "",
         };
       }
       return item;
@@ -490,15 +499,43 @@ function History() {
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Feature</label>
-                    <input
-                      type="text"
-                      value={editFeature}
-                      onChange={(e) => setEditFeature(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                    />
+                  <div className={editType === "Task" ? "col-span-1" : "col-span-2"}>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Feature / Technique</label>
+                    {editType === "Task" ? (
+                      <select
+                        value={editFeature}
+                        onChange={(e) => setEditFeature(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="">Select Technique</option>
+                        {editAssignee && assigneeTechniques[editAssignee] ? (
+                          assigneeTechniques[editAssignee].map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))
+                        ) : (
+                          <option value="" disabled>Select Assignee first</option>
+                        )}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={editFeature}
+                        onChange={(e) => setEditFeature(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      />
+                    )}
                   </div>
+                  {editType === "Task" && (
+                    <div className="col-span-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Metrics Count</label>
+                      <input
+                        type="number"
+                        value={editMetricsCount}
+                        onChange={(e) => setEditMetricsCount(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Row 3: QA Status & Ticket Status */}
