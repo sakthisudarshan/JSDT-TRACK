@@ -1,14 +1,14 @@
 import Sidebar from "../Sidebar";
 import Navbar from "../Navbar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Layout({ children }) {
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger shortcuts if user is typing in a form input
       const activeEl = document.activeElement;
       const isInput = activeEl && (
         activeEl.tagName === "INPUT" || 
@@ -51,12 +51,23 @@ function Layout({ children }) {
 
   return (
     <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen transition-colors duration-200">
-      <Sidebar />
+      
+      {/* Sidebar Panel */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="ml-64 flex-1 min-h-screen">
-        <Navbar />
+      {/* Mobile Sidebar backdrop screen mask */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <div className="p-8">
+      {/* Main content body container */}
+      <div className="ml-0 lg:ml-64 flex-1 min-h-screen flex flex-col w-full overflow-x-hidden">
+        <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+
+        <div className="p-4 sm:p-6 lg:p-8 flex-1">
           {children}
         </div>
 
