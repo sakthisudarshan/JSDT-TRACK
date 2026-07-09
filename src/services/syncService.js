@@ -1,29 +1,24 @@
-const SYNC_KEY_LOCAL = "jsdt-sync-key";
+// Hardcoded static key to automatically share database across all team devices
+const FIXED_SYNC_KEY = "jsdt_shared_team_sync_key_track_prod";
 
-// Initialize a random sync key if none exists
-export const initSyncKey = () => {
-  let key = localStorage.getItem(SYNC_KEY_LOCAL);
-  if (!key) {
-    key = "jsdt_sync_" + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
-    localStorage.setItem(SYNC_KEY_LOCAL, key);
-  }
-  return key;
-};
-
-// Get the current sync key
+// Get the shared team sync key
 export const getSyncKey = () => {
-  return localStorage.getItem(SYNC_KEY_LOCAL) || initSyncKey();
+  return FIXED_SYNC_KEY;
 };
 
-// Set/overwrite sync key (for linking devices)
-export const setSyncKey = (key) => {
-  localStorage.setItem(SYNC_KEY_LOCAL, key.trim());
+// Initialize sync key (always returns the shared key)
+export const initSyncKey = () => {
+  return FIXED_SYNC_KEY;
+};
+
+// Override sync key (always falls back to the shared key)
+export const setSyncKey = () => {
+  // No-op to preserve shared sync key
 };
 
 // Push data for a specific key to cloud bucket (kvdb.io)
 export const pushToCloud = async (keyName, data) => {
   const syncKey = getSyncKey();
-  if (!syncKey) return;
   try {
     await fetch(`https://kvdb.io/${syncKey}/${keyName}`, {
       method: "POST",
@@ -36,10 +31,8 @@ export const pushToCloud = async (keyName, data) => {
 };
 
 // Pull all data from cloud bucket and save to local storage
-export const pullFromCloud = async (customSyncKey) => {
-  const key = customSyncKey || getSyncKey();
-  if (!key) return false;
-  
+export const pullFromCloud = async () => {
+  const key = getSyncKey();
   try {
     let success = false;
     
@@ -64,9 +57,6 @@ export const pullFromCloud = async (customSyncKey) => {
       success = true;
     }
 
-    if (success && customSyncKey) {
-      setSyncKey(customSyncKey);
-    }
     return success;
   } catch (error) {
     console.error("Cloud pull failed:", error);
@@ -77,7 +67,6 @@ export const pullFromCloud = async (customSyncKey) => {
 // Smart startup sync: checks if cloud has data; if not, uploads existing local data!
 export const syncOnStartup = async () => {
   const key = getSyncKey();
-  if (!key) return;
 
   try {
     // 1. Sync entries

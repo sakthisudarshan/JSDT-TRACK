@@ -6,7 +6,7 @@ import {
   getTeamMembers, 
   saveTeamMembers 
 } from "../services/storageService";
-import { getSyncKey, pullFromCloud } from "../services/syncService";
+
 import { 
   Save, 
   UserPlus, 
@@ -18,11 +18,7 @@ import {
   Building,
   FolderOpen,
   Users,
-  Cloud,
-  Copy,
-  Eye,
-  EyeOff,
-  Link2
+  Cloud
 } from "lucide-react";
 
 function Settings() {
@@ -41,12 +37,7 @@ function Settings() {
 
   const [success, setSuccess] = useState("");
 
-  // Sync states
-  const [syncKey, setSyncKey] = useState("");
-  const [inputSyncKey, setInputSyncKey] = useState("");
-  const [syncSuccess, setSyncSuccess] = useState("");
-  const [syncError, setSyncError] = useState("");
-  const [showSyncKey, setShowSyncKey] = useState(false);
+
 
   // Load configuration
   useEffect(() => {
@@ -57,7 +48,6 @@ function Settings() {
       setExportFolder(config.exportFolder || "C:\\JSDT Status Tracker\\Exports");
       setTheme(config.theme || "light");
       setMembers(membersList);
-      setSyncKey(getSyncKey());
     });
   }, []);
 
@@ -139,29 +129,7 @@ function Settings() {
     setTimeout(() => setSuccess(""), 3000);
   };
 
-  // Link another device
-  const handleLinkDevice = async (e) => {
-    e.preventDefault();
-    const key = inputSyncKey.trim();
-    if (!key) return;
-    setSyncError("");
-    setSyncSuccess("");
 
-    const ok = await pullFromCloud(key);
-    if (ok) {
-      setSyncSuccess("Linked successfully! Syncing database and reloading workspace...");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } else {
-      setSyncError("Sync failed. Check Sync Key connection and try again.");
-    }
-  };
-
-  const handleCopySyncKey = () => {
-    navigator.clipboard.writeText(syncKey);
-    triggerSuccess("Sync key copied to clipboard!");
-  };
 
   return (
     <Layout>
@@ -279,79 +247,22 @@ function Settings() {
             </div>
 
             {/* Cloud Sync Section */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
                 <Cloud size={18} className="text-blue-500" />
-                <span>Cloud Synchronization</span>
+                <span>Cloud Status</span>
               </h2>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Connect multiple devices (e.g. mobile, tablet, desktop) to share your bug/task metrics database. Offline changes will automatically sync when online.
-              </p>
-
-              {/* Show/Copy key */}
-              <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Your Unique Sync Key</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type={showSyncKey ? "text" : "password"}
-                    value={syncKey}
-                    readOnly
-                    className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-slate-200 border-none outline-none select-all"
-                  />
-                  <button
-                    onClick={() => setShowSyncKey(!showSyncKey)}
-                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-850 rounded text-slate-500 dark:text-slate-400"
-                    title={showSyncKey ? "Hide key" : "Show key"}
-                  >
-                    {showSyncKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                  <button
-                    onClick={handleCopySyncKey}
-                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-850 rounded text-slate-500 dark:text-slate-400"
-                    title="Copy sync key"
-                  >
-                    <Copy size={16} />
-                  </button>
+              <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-850 rounded-2xl">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div className="text-xs font-semibold">
+                  Universally Synchronized
                 </div>
               </div>
 
-              {/* Link form */}
-              <form onSubmit={handleLinkDevice} className="space-y-3 pt-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Link Another Device</label>
-                
-                {syncSuccess && (
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-800 rounded-xl text-xs">
-                    {syncSuccess}
-                  </div>
-                )}
-                {syncError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-250 dark:border-red-800 rounded-xl text-xs">
-                    {syncError}
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                      <Link2 size={16} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Paste device sync key..."
-                      value={inputSyncKey}
-                      onChange={(e) => setInputSyncKey(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1 cursor-pointer"
-                  >
-                    Connect
-                  </button>
-                </div>
-              </form>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                All team members opening this application share the exact same bug/task metrics database. Any changes you make will be visible on all teammates' screens instantly. No keys or configuration required.
+              </p>
             </div>
 
           </div>
